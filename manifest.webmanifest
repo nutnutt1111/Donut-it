@@ -1,9 +1,9 @@
 {
-  "name": "Donut iT Tools",
-  "short_name": "DonutTools",
-  "start_url": "/",
+  "name": "Donut IT Tools",
+  "short_name": "DonutIT",
+  "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#f6f8ff",
-  "theme_color": "#1b4dd9",
+  "background_color": "#005bbb",
+  "theme_color": "#005bbb",
   "icons": []
 }
