@@ -1,0 +1,580 @@
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1b4dd9">
+<title>Donut iT Tools — Web App</title>
+<style>
+:root{
+  /* Color palette tuned for better contrast and modern look */
+  --brand:#1b4dd9;
+  --ink:#1f2d3d;      /* darker text for better readability */
+  --muted:#5f6b7d;    /* muted labels */
+  --bg:#fafbff;       /* very light background */
+  --card:#ffffff;     /* cards remain white */
+  --line:#e2e8f0;     /* subtle border lines */
+  --accent:#ecf3ff;   /* light accent for focus rings and badges */
+  --good:#0fa03c;     /* success green */
+  --bad:#d04545;      /* danger red */
+}
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,'Noto Sans Thai',Arial,sans-serif;margin:0;background:var(--bg);color:var(--ink)}
+header{padding:14px 16px; position:sticky; top:0; background:linear-gradient(#ffffff,#f7f9ff); border-bottom:1px solid var(--line); z-index:5}
+/* Main heading style: slightly larger and bolder */
+h1{font-size:20px; margin:0; color:var(--brand); font-weight:600}
+nav{display:flex; gap:8px; margin-top:16px; flex-wrap:wrap}
+.tabbtn{padding:8px 12px; border:1px solid var(--line); background:#fff; border-radius:999px; cursor:pointer; font-size:14px}
+.tabbtn.active{background:var(--brand); color:#fff; border-color:var(--brand)}
+.container{padding:14px}
+.card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; margin:10px 0; box-shadow:0 1px 0 rgba(0,0,0,.03)}
+label{display:block; font-size:13px; color:var(--muted); margin-bottom:6px}
+input,select{width:100%; padding:10px 12px; border:1px solid #d7deea; border-radius:10px; font-size:15px; outline:none; background:#fff}
+input:focus, select:focus{border-color:var(--brand); box-shadow:0 0 0 3px var(--accent)}
+.row{display:flex; gap:10px; flex-wrap:wrap}
+.col{flex:1 1 220px}
+h2{font-size:16px; margin:0 0 8px}
+.stat{background:#fff; border:1px dashed #d7deea; border-radius:12px; padding:12px; margin:8px 0}
+.stat h3{margin:0 0 4px; font-size:12px; color:var(--muted)}
+.stat .v{font-weight:700; font-size:20px}
+.ok{color:var(--good)} .bad{color:var(--bad)}
+footer{padding:30px 16px; text-align:center; color:var(--muted); font-size:12px}
+.small{font-size:12px; color:var(--muted)}
+.btn{background:var(--brand); color:#fff; border:none; border-radius:10px; padding:10px 12px; font-size:15px; cursor:pointer}
+.btn:active{transform:translateY(1px)}
+hr{border:none; border-top:1px solid var(--line); margin:12px 0}
+.notice{background:#fff3cd; color:#664d03; border:1px solid #ffe69c; padding:10px 12px; border-radius:10px; font-size:13px; margin:10px 0}
+  .pill{display:inline-block; padding:6px 10px; border-radius:999px; background:var(--accent); color:var(--brand); font-size:12px; margin-right:6px}
+
+/* Table styling for summaries */
+table{width:100%; border-collapse:collapse; margin-top:8px}
+th, td{padding:6px 8px; border-bottom:1px solid var(--line); font-size:14px}
+th{background:var(--accent); color:var(--ink); text-align:left}
+</style>
+</head>
+<body>
+<header>
+  <span class="pill">Donut iT</span>
+  <h1>เครื่องมือร้าน — คำนวณงวด | คืนยอด | ค่าแมส</h1>
+  <nav>
+    <button class="tabbtn active" data-tab="loan">คำนวณงวดผ่อน</button>
+    <button class="tabbtn" data-tab="refund">คำนวณคืนยอด/ปิดสัญญา</button>
+    <button class="tabbtn" data-tab="courier">คำนวณค่าแมส & กำไรสุทธิ</button>
+    <!-- New tab button for employee time tracking -->
+    <button class="tabbtn" data-tab="checkin">บันทึกเวลาทำงาน</button>
+  </nav>
+</header>
+
+<div class="container">
+  <!-- Loan Tab -->
+  <section id="tab-loan" class="card">
+    <h2>คำนวณงวดผ่อน</h2>
+    <div class="small">รองรับ 2 โหมด: <b>Flat Rate</b> และ <b>Effective (APR ต่อเดือน)</b></div>
+    <div class="row">
+      <div class="col">
+        <label>ราคาสินค้า (บาท)</label>
+        <input type="number" id="loan_price" value="25000" min="0" step="100" oninput="calcLoan()">
+      </div>
+      <div class="col">
+        <label>ดาวน์ (บาท)</label>
+        <input type="number" id="loan_down" value="5000" min="0" step="100" oninput="calcLoan()">
+      </div>
+      <div class="col">
+        <label>ระยะผ่อน (เดือน)</label>
+        <input type="number" id="loan_months" value="12" min="1" step="1" oninput="calcLoan()">
+      </div>
+      <div class="col">
+        <label>โหมดดอกเบี้ย</label>
+        <select id="loan_mode" onchange="calcLoan()">
+          <option value="flat">Flat Rate (% ต่อเดือน)</option>
+          <option value="apr">Effective / APR (% ต่อเดือน)</option>
+        </select>
+      </div>
+      <div class="col">
+        <label>อัตราดอกเบี้ย (% ต่อเดือน)</label>
+        <input type="number" id="loan_rate" value="1.5" min="0" step="0.1" oninput="calcLoan()">
+      </div>
+    </div>
+    <div class="row">
+      <div class="col stat">
+        <h3>ยอดจัด</h3>
+        <div class="v" id="loan_fin">— บาท</div>
+        <div class="small">ราคาสินค้า - ดาวน์</div>
+      </div>
+      <div class="col stat">
+        <h3>ค่างวดต่อเดือน</h3>
+        <div class="v" id="loan_pay">— บาท</div>
+        <div class="small" id="loan_note"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Refund Tab -->
+  <section id="tab-refund" class="card" style="display:none">
+    <h2>คำนวณคืนยอด / ปิดสัญญา (Fair Mode)</h2>
+    <div class="small">สูตรยืดหยุ่น: เงินที่ลูกค้าจ่ายมาแล้ว - (ค่าใช้เครื่อง/ค่าเสื่อม/ค่าธรรมเนียม)</div>
+    <div class="row">
+      <div class="col">
+        <label>ราคาขายต้นทาง (บาท)</label>
+        <input type="number" id="rf_price" value="35000" min="0" step="100" oninput="calcRefund()">
+      </div>
+      <div class="col">
+        <label>ดาวน์ที่จ่าย (บาท)</label>
+        <input type="number" id="rf_down" value="10000" min="0" step="100" oninput="calcRefund()">
+      </div>
+      <div class="col">
+        <label>ผ่อนไปแล้ว (งวด)</label>
+        <input type="number" id="rf_paid_m" value="3" min="0" step="1" oninput="calcRefund()">
+      </div>
+      <div class="col">
+        <label>ค่างวด/เดือน (บาท)</label>
+        <input type="number" id="rf_monthly" value="2500" min="0" step="50" oninput="calcRefund()">
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <label>ค่าใช้เครื่อง/ค่าเสื่อม (% ของราคา/เดือน)</label>
+        <input type="number" id="rf_dep_pct" value="1.0" min="0" step="0.1" oninput="calcRefund()">
+        <div class="small">เช่น 1%/เดือน ของราคาขายต้นทาง</div>
+      </div>
+      <div class="col">
+        <label>ค่าธรรมเนียมปิดสัญญา (บาท)</label>
+        <input type="number" id="rf_fee" value="500" min="0" step="50" oninput="calcRefund()">
+      </div>
+      <div class="col">
+        <label>ค่าปรับล่าช้า/ค่าเสี่ยง (บาท)</label>
+        <input type="number" id="rf_risk" value="0" min="0" step="50" oninput="calcRefund()">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col stat">
+        <h3>ลูกค้าจ่ายมาทั้งหมด</h3>
+        <div class="v" id="rf_paid">— บาท</div>
+        <div class="small">ดาวน์ + ค่างวดที่จ่าย</div>
+      </div>
+      <div class="col stat">
+        <h3>หักค่าใช้เครื่อง/ค่าเสื่อมรวม</h3>
+        <div class="v" id="rf_dep">— บาท</div>
+        <div class="small" id="rf_dep_note"></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col stat">
+        <h3>ยอดที่ควรคืนให้ลูกค้า (ประมาณการ)</h3>
+        <div class="v" id="rf_refund">— บาท</div>
+        <div class="small">= จ่ายมาแล้ว - (ค่าเสื่อม + ค่าธรรมเนียม + ค่าเสี่ยง)</div>
+      </div>
+      <div class="col stat">
+        <h3>หมายเหตุ</h3>
+        <div class="v small" id="rf_note">—</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Courier Tab -->
+  <section id="tab-courier" class="card" style="display:none">
+    <h2>คำนวณค่าแมส & กำไรสุทธิ</h2>
+    <div class="row">
+      <div class="col">
+        <label>ระยะทาง (กม.) — ขาเดียว</label>
+        <input type="number" id="c_oneway" value="5" min="0" step="0.1" oninput="calcCourier()">
+        <div class="small">ระบบจะคูณ 2 เป็นไป–กลับ</div>
+      </div>
+      <div class="col">
+        <label>จำนวนงานในทริปเดียวกัน</label>
+        <input type="number" id="c_jobs" value="1" min="1" step="1" oninput="calcCourier()">
+      </div>
+      <div class="col">
+        <label>โหมดคำนวณ</label>
+        <select id="c_mode" onchange="toggleCourier();calcCourier()">
+          <option value="bracket">ตามช่วงระยะ</option>
+          <option value="perkm">บาท/กม. (ไป–กลับ)</option>
+        </select>
+      </div>
+      <div class="col" id="c_perkmWrap" style="display:none">
+        <label>เรทบาท/กม.</label>
+        <input type="number" id="c_perkm" value="5" min="1" step="0.5" oninput="calcCourier()">
+      </div>
+    </div>
+    <div class="row" id="c_brackets">
+      <div class="col">
+        <label>0–10 กม.</label>
+        <input type="number" id="c_b1" value="60" min="0" step="5" oninput="calcCourier()">
+      </div>
+      <div class="col">
+        <label>11–20 กม.</label>
+        <input type="number" id="c_b2" value="100" min="0" step="5" oninput="calcCourier()">
+      </div>
+      <div class="col">
+        <label>21–30 กม.</label>
+        <input type="number" id="c_b3" value="160" min="0" step="5" oninput="calcCourier()">
+      </div>
+      <div class="col">
+        <label>31–40 กม.</label>
+        <input type="number" id="c_b4" value="220" min="0" step="5" oninput="calcCourier()">
+      </div>
+    </div>
+    <hr>
+    <div class="row">
+      <div class="col">
+        <label>กำไรดีลต่อชิ้น (ก่อนหักแมส)</label>
+        <input type="number" id="c_gross" value="1500" min="0" step="50" oninput="calcCourier()">
+      </div>
+      <div class="col">
+        <label>เพดานค่าแมส (% ของกำไร/ดีล)</label>
+        <input type="number" id="c_thres" value="15" min="1" max="50" step="1" oninput="calcCourier()">
+      </div>
+    </div>
+    <div class="row">
+      <div class="col stat">
+        <h3>ระยะไป–กลับ</h3>
+        <div class="v" id="c_rt">— กม.</div>
+        <div class="small" id="c_bucket">—</div>
+      </div>
+      <div class="col stat">
+        <h3>ค่าแมส (รวม)</h3>
+        <div class="v" id="c_cost">— บาท</div>
+        <div class="small">เฉลี่ยต่อดีล: <span id="c_cost_per">—</span> บาท</div>
+      </div>
+      <div class="col stat">
+        <h3>กำไรสุทธิหลังแมส</h3>
+        <div class="v" id="c_net">— บาท</div>
+        <div class="small">ต่อดีลเฉลี่ย: <span id="c_net_per">—</span> บาท</div>
+      </div>
+      <div class="col stat">
+        <h3>สถานะ</h3>
+        <div class="v" id="c_status">—</div>
+        <div class="small" id="c_advice">—</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Check-in Tab -->
+  <section id="tab-checkin" class="card" style="display:none">
+    <h2>บันทึกเวลาทำงาน</h2>
+    <div class="small">กรอกชื่อ, ตำแหน่ง และถ่ายรูปเพื่อบันทึกการเข้างาน/ออกงาน พร้อมส่งแจ้งเตือนผ่าน LINE Notify</div>
+    <div class="row">
+      <div class="col">
+        <label>ชื่อพนักงาน</label>
+        <input type="text" id="ci_name" placeholder="ชื่อ...">
+      </div>
+      <div class="col">
+        <label>ตำแหน่ง</label>
+        <input type="text" id="ci_position" placeholder="ตำแหน่ง...">
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <label>ถ่ายรูป (ตรวจสอบการเข้างาน)</label>
+        <input type="file" id="ci_photo" accept="image/*" capture="environment">
+      </div>
+      <div class="col">
+        <label>Token LINE Notify</label>
+        <input type="text" id="ci_token" placeholder="Token (ถ้ามี)">
+      </div>
+    </div>
+    <div class="row">
+      <button class="btn" type="button" onclick="checkIn()">ลงเวลาเข้างาน</button>
+      <button class="btn" type="button" onclick="checkOut()">ลงเวลาออกงาน</button>
+    </div>
+    <hr>
+    <h3>สรุปเวลาทำงานประจำวัน</h3>
+    <div id="ci_summary" class="small"></div>
+    <h3>สรุปรวมรายเดือน (แยกตามตำแหน่ง)</h3>
+    <div id="ci_monthly" class="small"></div>
+  </section>
+
+  <div class="notice">
+    ติดตั้งเป็นแอป: เปิดหน้านี้ใน Safari → ปุ่มแชร์ → <b>Add to Home Screen</b>
+  </div>
+</div>
+
+<footer>© Donut iT Tools — ทำงานออฟไลน์หลังติดตั้ง</footer>
+
+<script>
+// Tab handling
+const tabs = document.querySelectorAll('.tabbtn');
+tabs.forEach(btn => btn.addEventListener('click', () => {
+  tabs.forEach(b=>b.classList.remove('active')); btn.classList.add('active');
+  document.querySelectorAll('section[id^="tab-"]').forEach(s=>s.style.display='none');
+  document.getElementById('tab-'+btn.dataset.tab).style.display='block';
+}));
+
+// Loan calculator
+function fmt(n){ return Number(n).toLocaleString('th-TH'); }
+// Convert any input value to a number safely by stripping commas or other separators.
+function cleanNumber(val){
+  if(val === undefined || val === null) return 0;
+  // Convert to string and remove commas and spaces
+  const str = String(val).replace(/,/g, '').trim();
+  const num = Number(str);
+  return isNaN(num) ? 0 : num;
+}
+function calcLoan(){
+  const price = cleanNumber(document.getElementById('loan_price').value||0);
+  const down = cleanNumber(document.getElementById('loan_down').value||0);
+  // parse months as integer after cleaning commas
+  const months = Math.max(1, parseInt(String(document.getElementById('loan_months').value).replace(/,/g,'')||'1'));
+  const mode = document.getElementById('loan_mode').value;
+  const rate = cleanNumber(document.getElementById('loan_rate').value||0)/100.0; // per month
+  const finance = Math.max(0, price - down);
+
+  let pay = 0, note="";
+  if(mode==='flat'){
+    // Flat-rate interest over term, distributed evenly per month
+    const total = finance * (1 + rate*months);
+    pay = total / months;
+    note = "Flat rate " + (rate*100).toFixed(2) + "%/เดือน";
+  }else{
+    // Effective APR per month (annuity formula)
+    if(rate===0){
+      pay = finance / months;
+    }else{
+      const i = rate;
+      pay = finance * (i * Math.pow(1+i, months)) / (Math.pow(1+i, months)-1);
+    }
+    note = "Effective (APR) " + (rate*100).toFixed(2) + "%/เดือน";
+  }
+  document.getElementById('loan_fin').textContent = fmt(finance) + " บาท";
+  document.getElementById('loan_pay').textContent = fmt(Math.round(pay)) + " บาท";
+  document.getElementById('loan_note').textContent = note;
+}
+
+// Refund calculator
+function calcRefund(){
+  const price = cleanNumber(document.getElementById('rf_price').value||0);
+  const down = cleanNumber(document.getElementById('rf_down').value||0);
+  const paidM = Math.max(0, parseInt(String(document.getElementById('rf_paid_m').value).replace(/,/g,'')||'0'));
+  const monthly = cleanNumber(document.getElementById('rf_monthly').value||0);
+  const depPct = cleanNumber(document.getElementById('rf_dep_pct').value||0)/100.0;
+  const fee = cleanNumber(document.getElementById('rf_fee').value||0);
+  const risk = cleanNumber(document.getElementById('rf_risk').value||0);
+
+  const paidTotal = down + paidM*monthly;
+  const dep = price * depPct * paidM;
+  const refund = Math.max(0, paidTotal - (dep + fee + risk));
+
+  document.getElementById('rf_paid').textContent = fmt(paidTotal) + " บาท";
+  document.getElementById('rf_dep').textContent = fmt(dep) + " บาท";
+  document.getElementById('rf_refund').textContent = fmt(refund) + " บาท";
+  document.getElementById('rf_dep_note').textContent = `คิด ${ (depPct*100).toFixed(2) }%/เดือน × ${paidM} เดือน ของราคา ${fmt(price)} บาท`;
+
+  document.getElementById('rf_note').textContent = "ปรับเปอร์เซ็นต์ค่าเสื่อม/ค่าธรรมเนียม/ความเสี่ยงได้ตามสภาพสินค้าและข้อตกลงจริง";
+}
+
+// Courier calculator
+function toggleCourier(){
+  const mode = document.getElementById('c_mode').value;
+  document.getElementById('c_perkmWrap').style.display = (mode==='perkm') ? '' : 'none';
+  document.getElementById('c_brackets').style.opacity = (mode==='perkm') ? .4 : 1;
+}
+function pickBracket(rt,b1,b2,b3,b4){
+  if(rt<=10) return {cost:b1, bucket:'0–10 กม.'};
+  if(rt<=20) return {cost:b2, bucket:'11–20 กม.'};
+  if(rt<=30) return {cost:b3, bucket:'21–30 กม.'};
+  if(rt<=40) return {cost:b4, bucket:'31–40 กม.'};
+  return {cost:null, bucket:'>40 กม. (คำนวณตามกม.)'};
+}
+function calcCourier(){
+  const oneway = cleanNumber(document.getElementById('c_oneway').value||0);
+  const jobs = Math.max(1, parseInt(String(document.getElementById('c_jobs').value).replace(/,/g,'')||'1'));
+  const mode = document.getElementById('c_mode').value;
+  const perkm = cleanNumber(document.getElementById('c_perkm').value||5);
+  const b1 = cleanNumber(document.getElementById('c_b1').value||60);
+  const b2 = cleanNumber(document.getElementById('c_b2').value||100);
+  const b3 = cleanNumber(document.getElementById('c_b3').value||160);
+  const b4 = cleanNumber(document.getElementById('c_b4').value||220);
+  const gross = cleanNumber(document.getElementById('c_gross').value||0);
+  const thres = cleanNumber(document.getElementById('c_thres').value||15);
+
+  const rt = Math.max(0, oneway*2);
+  document.getElementById('c_rt').textContent = fmt(rt) + " กม.";
+
+  let cost=0, bucket='';
+  if(mode==='bracket'){
+    const pick = pickBracket(rt,b1,b2,b3,b4);
+    if(pick.cost!==null){
+      cost = pick.cost; bucket = "ช่วงระยะ: " + pick.bucket;
+    }else{
+      cost = Math.round(rt*perkm); bucket = pick.bucket + " • เรท " + perkm + " บาท/กม.";
+    }
+  }else{
+    cost = Math.round(rt*perkm); bucket = "คำนวณตามกม. × " + perkm + " บาท/กม.";
+  }
+  const costPer = cost / jobs;
+  const net = Math.max(0, gross*jobs - cost);
+  const netPer = Math.max(0, gross - costPer);
+  const allowed = gross * thres/100;
+  const ok = costPer <= allowed;
+
+  document.getElementById('c_bucket').textContent = bucket;
+  document.getElementById('c_cost').textContent = fmt(cost) + " บาท";
+  document.getElementById('c_cost_per').textContent = fmt(costPer.toFixed(0));
+  document.getElementById('c_net').textContent = fmt(net) + " บาท";
+  document.getElementById('c_net_per').textContent = fmt(netPer.toFixed(0));
+  document.getElementById('c_status').textContent = ok ? "คุ้ม (ผ่านเกณฑ์)" : "ไม่คุ้ม";
+  document.getElementById('c_status').className = ok ? "v ok" : "v bad";
+  document.getElementById('c_advice').textContent = ok ? "รวมงานเพิ่มยิ่งคุ้ม" : "นัดลูกค้ามาหน้าร้าน / รวม 2–3 งานในทริปเดียว";
+}
+
+// === Employee time tracking logic ===
+// Load existing work entries from localStorage. Each entry has:
+// { name: string, position: string, date: 'YYYY-MM-DD', checkin: ISOString, checkout: ISOString|null }
+let entries = [];
+try {
+  entries = JSON.parse(localStorage.getItem('workEntries')) || [];
+} catch (e) {
+  entries = [];
+}
+
+// Save entries back to localStorage
+function saveEntries() {
+  try {
+    localStorage.setItem('workEntries', JSON.stringify(entries));
+  } catch (e) {
+    // ignore write errors (e.g. storage full)
+  }
+}
+
+// Render summary for the currently entered employee
+function renderSummary() {
+  const name = document.getElementById('ci_name')?.value.trim();
+  const summaryDiv = document.getElementById('ci_summary');
+  const monthlyDiv = document.getElementById('ci_monthly');
+  if (!summaryDiv || !monthlyDiv) return;
+  summaryDiv.innerHTML = '';
+  monthlyDiv.innerHTML = '';
+  if (!name) return;
+  // filter entries for this name
+  const userEntries = entries.filter(e => e.name === name);
+  // group by date
+  const groups = {};
+  userEntries.forEach(e => {
+    if (!groups[e.date]) groups[e.date] = [];
+    groups[e.date].push(e);
+  });
+  // daily summary table
+  let html = '<table style="width:100%;border-collapse:collapse;text-align:left">' +
+             '<tr><th style="border-bottom:1px solid var(--line)">วันที่</th>' +
+             '<th style="border-bottom:1px solid var(--line)">เข้างาน</th>' +
+             '<th style="border-bottom:1px solid var(--line)">ออกงาน</th>' +
+             '<th style="border-bottom:1px solid var(--line)">ชั่วโมง</th></tr>';
+  Object.keys(groups).sort().forEach(date => {
+    const dayEntries = groups[date];
+    dayEntries.forEach(en => {
+      let hours = '';
+      if (en.checkout) {
+        const diff = (new Date(en.checkout) - new Date(en.checkin)) / (1000 * 60 * 60);
+        hours = diff.toFixed(2);
+      } else {
+        hours = '-';
+      }
+      const inTime = new Date(en.checkin).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+      const outTime = en.checkout ? new Date(en.checkout).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '-';
+      html += `<tr><td>${date}</td><td>${inTime}</td><td>${outTime}</td><td>${hours}</td></tr>`;
+    });
+  });
+  html += '</table>';
+  summaryDiv.innerHTML = html;
+  // monthly summary by position
+  const now = new Date();
+  const month = now.toISOString().slice(0, 7); // YYYY-MM
+  const monthlyEntries = userEntries.filter(e => e.date.startsWith(month));
+  const totals = {};
+  monthlyEntries.forEach(en => {
+    if (!totals[en.position]) totals[en.position] = 0;
+    if (en.checkout) {
+      totals[en.position] += (new Date(en.checkout) - new Date(en.checkin)) / (1000 * 60 * 60);
+    }
+  });
+  let mhtml = '<table style="width:100%;border-collapse:collapse;text-align:left">' +
+              '<tr><th style="border-bottom:1px solid var(--line)">ตำแหน่ง</th>' +
+              '<th style="border-bottom:1px solid var(--line)">ชั่วโมงรวม</th></tr>';
+  Object.keys(totals).forEach(pos => {
+    mhtml += `<tr><td>${pos}</td><td>${totals[pos].toFixed(2)}</td></tr>`;
+  });
+  mhtml += '</table>';
+  monthlyDiv.innerHTML = mhtml;
+}
+
+// Handle check-in: record current time, photo, and optionally send to LINE Notify
+function checkIn() {
+  const nameInput = document.getElementById('ci_name');
+  const posInput = document.getElementById('ci_position');
+  const photoInput = document.getElementById('ci_photo');
+  const tokenInput = document.getElementById('ci_token');
+  if (!nameInput || !posInput) return;
+  const name = nameInput.value.trim();
+  const pos = posInput.value.trim();
+  if (!name || !pos) {
+    alert('กรุณาใส่ชื่อและตำแหน่ง');
+    return;
+  }
+  const now = new Date();
+  const date = now.toISOString().split('T')[0];
+  // send photo via LINE Notify if token and photo present
+  const token = tokenInput && tokenInput.value.trim();
+  if (token && photoInput && photoInput.files && photoInput.files[0]) {
+    const file = photoInput.files[0];
+    const formData = new FormData();
+    formData.append('message', `${name} (${pos}) เข้างาน ${now.toLocaleString('th-TH')}`);
+    formData.append('imageFile', file);
+    fetch('https://notify-api.line.me/api/notify', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token },
+      body: formData
+    }).catch(() => { /* ignore errors */ });
+  }
+  // record entry
+  entries.push({ name: name, position: pos, date: date, checkin: now.toISOString(), checkout: null });
+  saveEntries();
+  renderSummary();
+  alert('บันทึกเวลาเข้างานแล้ว');
+}
+
+// Handle check-out: set checkout time on last entry for this user today
+function checkOut() {
+  const nameInput = document.getElementById('ci_name');
+  const posInput = document.getElementById('ci_position');
+  if (!nameInput || !posInput) return;
+  const name = nameInput.value.trim();
+  const pos = posInput.value.trim();
+  if (!name || !pos) {
+    alert('กรุณาใส่ชื่อและตำแหน่ง');
+    return;
+  }
+  const now = new Date();
+  const date = now.toISOString().split('T')[0];
+  // find latest entry for this name and date without checkout
+  for (let i = entries.length - 1; i >= 0; i--) {
+    const e = entries[i];
+    if (e.name === name && e.position === pos && e.date === date && !e.checkout) {
+      e.checkout = now.toISOString();
+      break;
+    }
+  }
+  saveEntries();
+  renderSummary();
+  alert('บันทึกเวลาออกงานแล้ว');
+}
+
+// PWA install
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+
+// init
+window.addEventListener('DOMContentLoaded', ()=>{
+  calcLoan(); calcRefund(); toggleCourier(); calcCourier();
+  // render summary for check-in if name is present
+  renderSummary();
+});
+</script>
+</body>
+</html>
