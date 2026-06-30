@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+:root {
+  --donut-blue: #004aad;
+  --donut-blue-light: #007bff;
+  --donut-bg: #f0f6ff;
+}
+
+body {
+  background: var(--donut-bg);
+  color: #1a1a2e;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
