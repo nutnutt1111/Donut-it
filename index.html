@@ -107,6 +107,190 @@
       transform: translateY(-5px);
       box-shadow: 0 8px 16px rgba(0,0,0,0.2);
     }
+    .tabs {
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .tab.active {
+      background: #004aad;
+      color: white;
+    }
+    .content-panel {
+      max-width: 720px;
+      margin: 0 auto 2rem;
+      padding: 0 1rem;
+      text-align: left;
+    }
+    .content-panel h3 {
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+    .content-panel > p {
+      text-align: center;
+      color: #666;
+      margin-top: 0;
+    }
+    .salary-form {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 74, 173, 0.08);
+      padding: 1rem;
+    }
+    .salary-meta {
+      display: grid;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .salary-field {
+      display: grid;
+      gap: 0.35rem;
+      font-size: 0.9rem;
+      color: #444;
+    }
+    .salary-field input,
+    .salary-input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0.65rem 0.75rem;
+      border: 1px solid #d7e3f7;
+      border-radius: 8px;
+      font-size: 1rem;
+      background: #fbfdff;
+    }
+    .salary-field input:focus,
+    .salary-input:focus {
+      outline: none;
+      border-color: #004aad;
+      box-shadow: 0 0 0 3px rgba(0, 74, 173, 0.12);
+    }
+    .salary-section-title {
+      font-weight: bold;
+      color: #004aad;
+      margin: 0.5rem 0 0.75rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 2px solid #e0ebff;
+    }
+    .salary-table-wrap {
+      overflow-x: auto;
+    }
+    .salary-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+    .salary-table th,
+    .salary-table td {
+      padding: 0.55rem 0.35rem;
+      border-bottom: 1px solid #edf2fb;
+      vertical-align: middle;
+    }
+    .salary-table th {
+      color: #004aad;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+    .line-label {
+      display: block;
+      font-weight: 600;
+    }
+    .line-note {
+      display: block;
+      color: #777;
+      font-size: 0.78rem;
+      margin-top: 0.15rem;
+    }
+    .subtotal {
+      font-weight: 700;
+      color: #004aad;
+      text-align: right;
+      white-space: nowrap;
+    }
+    .subtotal.is-deduction {
+      color: #c0392b;
+    }
+    .muted {
+      color: #999;
+      text-align: center;
+    }
+    .total-label {
+      font-weight: 700;
+      text-align: right;
+      font-size: 1.05rem;
+    }
+    .total-value {
+      font-weight: 800;
+      color: #004aad;
+      text-align: right;
+      font-size: 1.15rem;
+      white-space: nowrap;
+    }
+    .total-value.is-negative {
+      color: #c0392b;
+    }
+    .is-deduction-row .line-label {
+      color: #a93226;
+    }
+    .salary-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+    .btn-secondary {
+      background: #e8f0ff;
+      color: #004aad;
+      flex: 1;
+      min-width: 140px;
+    }
+    .salary-hint {
+      margin: 0.75rem 0 0;
+      text-align: center;
+      color: #1e7e34;
+      font-size: 0.9rem;
+    }
+    @media (max-width: 640px) {
+      .salary-table thead {
+        display: none;
+      }
+      .salary-table tr {
+        display: block;
+        margin-bottom: 0.85rem;
+        padding-bottom: 0.85rem;
+        border-bottom: 1px solid #edf2fb;
+      }
+      .salary-table td {
+        display: grid;
+        grid-template-columns: 110px 1fr;
+        gap: 0.35rem 0.75rem;
+        border: none;
+        padding: 0.25rem 0;
+      }
+      .salary-table td::before {
+        content: attr(data-label);
+        color: #666;
+        font-size: 0.82rem;
+      }
+      .salary-table td.subtotal,
+      .salary-table td.muted {
+        align-items: center;
+      }
+      .salary-table tfoot tr {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+      .salary-table tfoot td {
+        display: table-cell;
+        padding-top: 0.75rem;
+      }
+      .salary-table tfoot td.total-label::before {
+        content: none;
+      }
+    }
+    @media (min-width: 641px) {
+      .salary-meta {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -121,22 +305,36 @@
   </div>
 
   <div class="tabs">
-    <div class="tab" onclick="openTab('loan')">คำนวณงวดผ่อน</div>
-    <div class="tab" onclick="openTab('delivery')">ค่าแมส</div>
-    <div class="tab" onclick="openTab('checkin')">เช็กอินงาน</div>
+    <div class="tab active" data-tab="loan" onclick="openTab('loan')">คำนวณงวดผ่อน</div>
+    <div class="tab" data-tab="delivery" onclick="openTab('delivery')">ค่าแมส</div>
+    <div class="tab" data-tab="checkin" onclick="openTab('checkin')">เช็กอินงาน</div>
+    <div class="tab" data-tab="salary" onclick="openTab('salary')">คำนวณเงินเดือน</div>
   </div>
 
   <div id="loan" class="content active">
-    <h3>เครื่องมือคำนวณงวดผ่อน</h3>
-    <p>ใส่ราคาและจำนวนงวดเพื่อดูผลลัพธ์</p>
+    <div class="content-panel">
+      <h3>เครื่องมือคำนวณงวดผ่อน</h3>
+      <p>ใส่ราคาและจำนวนงวดเพื่อดูผลลัพธ์</p>
+    </div>
   </div>
   <div id="delivery" class="content">
-    <h3>คำนวณค่าแมส</h3>
-    <p>กรอกระยะทางเพื่อคำนวณค่าจัดส่ง</p>
+    <div class="content-panel">
+      <h3>คำนวณค่าแมส</h3>
+      <p>กรอกระยะทางเพื่อคำนวณค่าจัดส่ง</p>
+    </div>
   </div>
   <div id="checkin" class="content">
-    <h3>เช็กอินงาน</h3>
-    <p>ระบบบันทึกเวลาเข้า-ออกงาน</p>
+    <div class="content-panel">
+      <h3>เช็กอินงาน</h3>
+      <p>ระบบบันทึกเวลาเข้า-ออกงาน</p>
+    </div>
+  </div>
+  <div id="salary" class="content">
+    <div class="content-panel">
+      <h3>คำนวณเงินเดือน</h3>
+      <p>กรอกอัตราและจำนวน ระบบจะคำนวณยอดรวมให้อัตโนมัติ</p>
+      <div id="salary-calculator"></div>
+    </div>
   </div>
 
   <h2>ฟีเจอร์เด่น</h2>
@@ -146,10 +344,20 @@
     <div class="card">🔒 ปลอดภัย</div>
   </div>
 
+  <script src="salary.js"></script>
   <script>
+    let salaryInitialized = false;
+
     function openTab(tabId) {
       document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
+      document.querySelector(`.tab[data-tab="${tabId}"]`)?.classList.add('active');
+
+      if (tabId === 'salary' && !salaryInitialized) {
+        window.DonutSalary.init('salary-calculator');
+        salaryInitialized = true;
+      }
     }
   </script>
 </body>

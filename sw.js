@@ -2,7 +2,8 @@ self.addEventListener('install', function(event) {
   event.waitUntil(
     caches.open('donut-cache').then(function(cache) {
       return cache.addAll([
-        '/index.html'
+        '/index.html',
+        '/salary.js'
       ]);
     })
   );
